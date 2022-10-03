@@ -41,17 +41,7 @@ void hdoc::indexer::Indexer::run() {
   Finder.addMatcher(EnumFinder.getMatcher(), &EnumFinder);
   Finder.addMatcher(NamespaceFinder.getMatcher(), &NamespaceFinder);
 
-  // Add include search paths to clang invocation
-  std::vector<clang::tooling::ArgumentsAdjuster> args = {};
-  for (const std::string& d : cfg->includePaths) {
-    // Ignore include paths that don't exist
-    if (!std::filesystem::exists(d)) {
-      spdlog::warn("Include path {} does not exist. Proceeding without it.", d);
-      continue;
-    }
-    spdlog::info("Appending {} to list of include paths.", d);
-    args.push_back(clang::tooling::getInsertArgumentAdjuster(("-isystem" + d).c_str()));
-  }
+  std::vector<clang::tooling::ArgumentsAdjuster> args = {getArgumentAdjusterForConfig(*this->cfg)};
 
   hdoc::indexer::ParallelExecutor tool(*cmpdb, args, this->pool, this->cfg->debugLimitNumIndexedFiles);
   tool.execute(clang::tooling::newFrontendActionFactory(&Finder));
@@ -180,4 +170,18 @@ void hdoc::indexer::Indexer::pruneTypeRefs() {
 
 const hdoc::types::Index* hdoc::indexer::Indexer::dump() const {
   return &this->index;
+}
+
+clang::tooling::ArgumentsAdjuster hdoc::indexer::getArgumentAdjusterForConfig(const hdoc::types::Config& cfg) {
+  std::vector<std::string> extraArgs;
+  for (const std::string& d : cfg.includePaths) {
+    // Ignore include paths that don't exist
+    if (!std::filesystem::exists(d)) {
+      spdlog::warn("Include path {} does not exist. Proceeding without it.", d);
+      continue;
+    }
+    spdlog::info("Appending {} to list of include paths.", d);
+    extraArgs.push_back("-isystem" + d);
+  }
+  return clang::tooling::getInsertArgumentAdjuster(extraArgs, clang::tooling::ArgumentInsertPosition::END);
 }

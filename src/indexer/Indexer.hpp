@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "clang/Tooling/Tooling.h"
 #include "llvm/Support/ThreadPool.h"
 
 #include "types/Config.hpp"
@@ -44,5 +45,7 @@ private:
   const hdoc::types::Config* cfg;
   llvm::ThreadPool&          pool;
 };
+
+clang::tooling::ArgumentsAdjuster getArgumentAdjusterForConfig(const hdoc::types::Config& cfg);
 
 } // namespace hdoc::indexer

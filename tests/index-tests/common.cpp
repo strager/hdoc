@@ -8,8 +8,14 @@
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Tooling/Tooling.h"
 
+#include "indexer/Indexer.hpp"
 #include "indexer/Matchers.hpp"
 #include "types/Symbols.hpp"
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 void runOverCode(const std::string_view code, hdoc::types::Index& index, const hdoc::types::Config cfg) {
   clang::ast_matchers::MatchFinder          Finder;
@@ -24,7 +30,22 @@ void runOverCode(const std::string_view code, hdoc::types::Index& index, const h
   Finder.addMatcher(NamespaceFinder.getMatcher(), &NamespaceFinder);
 
   std::unique_ptr<clang::tooling::FrontendActionFactory> Factory(clang::tooling::newFrontendActionFactory(&Finder));
-  clang::tooling::runToolOnCode(Factory->create(), code);
+  std::unique_ptr<clang::FrontendAction> ToolAction = Factory->create();
+
+  std::string fileName = "input.cc";
+  std::string codeCopy(code);  // TODO(strager): Avoid this copy.
+
+  std::vector<std::string> args = hdoc::indexer::getArgumentAdjusterForConfig(cfg)({}, fileName);
+  args.insert(args.begin(), "-fsyntax-only");
+  args.insert(args.begin(), "index-test-tool");
+  args.push_back(fileName);
+
+  llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> vfs(new llvm::vfs::InMemoryFileSystem());
+  vfs->addFile(fileName, 0, llvm::MemoryBuffer::getMemBuffer(codeCopy));
+  llvm::IntrusiveRefCntPtr<clang::FileManager> files(new clang::FileManager(clang::FileSystemOptions(), vfs));
+
+  clang::tooling::ToolInvocation invocation(args, std::move(ToolAction), files.get(), std::make_shared<clang::PCHContainerOperations>());
+  invocation.run();
 }
 
 void checkIndexSizes(const hdoc::types::Index& index,

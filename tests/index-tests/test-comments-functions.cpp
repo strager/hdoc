@@ -45,6 +45,60 @@ TEST_CASE("Function with docComment only (style 1)") {
   CHECK(s.templateParams.size() == 0);
 }
 
+TEST_CASE("Function with plain comment is ignored by default") {
+  const std::string code = R"(
+    // Some comment
+    void someFunction();
+  )";
+
+  hdoc::types::Index index;
+  hdoc::types::Config cfg;  // Do not set cfg.ignorePlainComments.
+  runOverCode(code, index, cfg);
+  checkIndexSizes(index, 0, 1, 0, 0);
+
+  hdoc::types::FunctionSymbol s = index.functions.entries.begin()->second;
+  CHECK(s.name == "someFunction");
+  CHECK(s.briefComment == "");
+  CHECK(s.docComment == "");  // Comment should not be recognized.
+}
+
+TEST_CASE("Function with plain comment is ignored if opted out despite project settings") {
+  const std::string code = R"(
+    // Some comment
+    void someFunction();
+  )";
+
+  hdoc::types::Index index;
+  hdoc::types::Config cfg;
+  cfg.ignorePlainComments = true;
+  std::vector<std::string> projectClangArgs = {"-fparse-all-comments"};
+  runOverCode(code, index, cfg, projectClangArgs);
+  checkIndexSizes(index, 0, 1, 0, 0);
+
+  hdoc::types::FunctionSymbol s = index.functions.entries.begin()->second;
+  CHECK(s.name == "someFunction");
+  CHECK(s.briefComment == "");
+  CHECK(s.docComment == "");  // Comment should not be recognized.
+}
+
+TEST_CASE("Function with plain comment is recognized if opted in") {
+  const std::string code = R"(
+    // Some comment
+    void someFunction();
+  )";
+
+  hdoc::types::Index index;
+  hdoc::types::Config cfg;
+  cfg.ignorePlainComments = false;
+  runOverCode(code, index, cfg);
+  checkIndexSizes(index, 0, 1, 0, 0);
+
+  hdoc::types::FunctionSymbol s = index.functions.entries.begin()->second;
+  CHECK(s.name == "someFunction");
+  CHECK(s.briefComment == "");
+  CHECK(s.docComment == "Some comment");
+}
+
 TEST_CASE("Function with docComment only (style 2)") {
   const std::string code = R"(
     /**

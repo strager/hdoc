@@ -9,10 +9,12 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 void runOverCode(const std::string_view    code,
                  hdoc::types::Index&       index,
-                 const hdoc::types::Config cfg = hdoc::types::Config());
+                 const hdoc::types::Config cfg = hdoc::types::Config(),
+                 std::vector<std::string>  projectClangArgs = {});
 
 void checkIndexSizes(const hdoc::types::Index& index,
                      const uint32_t            recordsSize,

@@ -154,6 +154,18 @@ paths = [
 ]
 ```
 
+### `ignore_plain_comments`
+
+Only Doxygen-style comments (those starting with `///` or `/**`) are included by default. Comments starting with just `//` or `/*` are ignored.
+If `ignore_plain_comments` is set to false, then hdoc interprets any kind of comment as documentation.
+This is a boolean value that is true by default and can be overridden.
+It is optional.
+
+```toml
+[ignore]
+ignore_plain_comments = false
+```
+
 ### `ignore_private_members`
 
 Private member variables and private member functions of records are included in the documentation output by default.

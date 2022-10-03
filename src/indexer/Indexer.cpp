@@ -183,5 +183,14 @@ clang::tooling::ArgumentsAdjuster hdoc::indexer::getArgumentAdjusterForConfig(co
     spdlog::info("Appending {} to list of include paths.", d);
     extraArgs.push_back("-isystem" + d);
   }
-  return clang::tooling::getInsertArgumentAdjuster(extraArgs, clang::tooling::ArgumentInsertPosition::END);
+
+  return [extraArgs = std::move(extraArgs), ignorePlainComments = cfg.ignorePlainComments](const std::vector<std::string> &args, llvm::StringRef fileName) {
+      std::vector<std::string> newArgs = clang::tooling::getInsertArgumentAdjuster(extraArgs, clang::tooling::ArgumentInsertPosition::END)(args, fileName);
+      if (ignorePlainComments) {
+        newArgs.erase(std::remove(newArgs.begin(), newArgs.end(), "-fparse-all-comments"), newArgs.end());
+      } else {
+        newArgs.push_back("-fparse-all-comments");
+      }
+      return newArgs;
+  };
 }

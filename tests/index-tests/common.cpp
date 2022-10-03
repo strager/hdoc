@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-void runOverCode(const std::string_view code, hdoc::types::Index& index, const hdoc::types::Config cfg) {
+void runOverCode(const std::string_view code, hdoc::types::Index& index, const hdoc::types::Config cfg, std::vector<std::string> projectClangArgs) {
   clang::ast_matchers::MatchFinder          Finder;
   hdoc::indexer::matchers::FunctionMatcher  FunctionFinder(&index, &cfg);
   hdoc::indexer::matchers::RecordMatcher    RecordFinder(&index, &cfg);
@@ -35,7 +35,7 @@ void runOverCode(const std::string_view code, hdoc::types::Index& index, const h
   std::string fileName = "input.cc";
   std::string codeCopy(code);  // TODO(strager): Avoid this copy.
 
-  std::vector<std::string> args = hdoc::indexer::getArgumentAdjusterForConfig(cfg)({}, fileName);
+  std::vector<std::string> args = hdoc::indexer::getArgumentAdjusterForConfig(cfg)(projectClangArgs, fileName);
   args.insert(args.begin(), "-fsyntax-only");
   args.insert(args.begin(), "index-test-tool");
   args.push_back(fileName);

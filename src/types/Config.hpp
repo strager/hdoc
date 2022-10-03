@@ -33,6 +33,7 @@ struct Config {
   std::string              gitRepoURL;                   ///< URL prefix of a GitHub or GitLab repo for source links
   std::vector<std::string> includePaths;                 ///< Include paths passed on to Clang
   std::vector<std::string> ignorePaths;                  ///< Paths from which matches should be ignored
+  bool                     ignorePlainComments  = true;  ///< Ignore '//' and '/*' comments (only consider '///' and '/**' comments)
   bool                     ignorePrivateMembers = false; ///< Should private members of records be ignored?
   std::filesystem::path    homepage;                     ///< Path to "homepage" markdown file
   std::vector<std::filesystem::path> mdPaths;            ///< Paths to markdown pages

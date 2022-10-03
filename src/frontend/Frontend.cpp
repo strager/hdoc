@@ -218,6 +218,10 @@ hdoc::frontend::Frontend::Frontend(int argc, char** argv, hdoc::types::Config* c
     cfg->ignorePrivateMembers = *ignorePrivateMembers;
   }
 
+  if (std::optional<bool> ignorePlainComments = toml["ignore"]["ignore_plain_comments"].value<bool>()) {
+    cfg->ignorePlainComments = *ignorePlainComments;
+  }
+
   // Collect paths to markdown files
   cfg->homepage = std::filesystem::path(toml["pages"]["homepage"].value_or(""));
   if (const auto& mdPaths = toml["pages"]["paths"].as_array()) {
